@@ -2,6 +2,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { Database } from 'lucide-react';
 
 interface TableSelectorProps {
   tables: string[];
@@ -20,7 +21,10 @@ const TableSelector = ({
 }: TableSelectorProps) => {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Select Table</label>
+      <label className="text-sm font-medium flex items-center">
+        <Database className={`h-4 w-4 mr-1 ${colorClass}`} />
+        Select Table
+      </label>
       <Select
         value={selectedTable || ''}
         onValueChange={onTableSelect}
@@ -29,14 +33,17 @@ const TableSelector = ({
         <SelectTrigger className={cn("w-full", tables.length === 0 ? "opacity-50" : "")}>
           <SelectValue placeholder="Select a table" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border shadow-md">
           {tables.map((table) => (
-            <SelectItem key={table} value={table}>
+            <SelectItem key={table} value={table} className="hover:bg-gray-100">
               {table}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+      {tables.length === 0 && !isLoading && (
+        <p className="text-xs text-muted-foreground">No tables available</p>
+      )}
     </div>
   );
 };

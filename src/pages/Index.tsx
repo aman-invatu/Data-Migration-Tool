@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import DatabaseConnection from '@/components/DatabaseConnection';
 import TableSelector from '@/components/TableSelector';
 import DataPreview from '@/components/DataPreview';
@@ -38,6 +37,16 @@ const Index = () => {
 
   // Handle Retool connection
   const handleRetoolConnect = async (connectionString: string) => {
+    // Validate connection string
+    if (!connectionString.trim()) {
+      toast({
+        title: "Connection Error",
+        description: "Please enter your Retool database connection string",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsRetoolConnecting(true);
       const tables = await databaseService.connectToDatabase('retool', connectionString);
@@ -60,6 +69,16 @@ const Index = () => {
 
   // Handle Supabase connection
   const handleSupabaseConnect = async (connectionString: string) => {
+    // Validate connection string
+    if (!connectionString.trim()) {
+      toast({
+        title: "Connection Error",
+        description: "Please enter your Supabase database connection string",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSupabaseConnecting(true);
       const tables = await databaseService.connectToDatabase('supabase', connectionString);
@@ -87,6 +106,10 @@ const Index = () => {
     try {
       const data = await databaseService.getTableData('retool', tableName);
       setRetoolData(data);
+      toast({
+        title: "Table Selected",
+        description: `Loaded preview data from ${tableName}`,
+      });
     } catch (error: any) {
       toast({
         title: "Failed to load table data",
@@ -105,6 +128,10 @@ const Index = () => {
     try {
       const data = await databaseService.getTableData('supabase', tableName);
       setSupabaseData(data);
+      toast({
+        title: "Table Selected",
+        description: `Loaded preview data from ${tableName}`,
+      });
     } catch (error: any) {
       toast({
         title: "Failed to load table data",
@@ -163,7 +190,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Database Migration Wizard</h1>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-retool to-supabase bg-clip-text text-transparent">Data Migration Tool</h1>
           <p className="text-muted-foreground">
             Connect to source and target databases, select tables, and migrate data seamlessly
           </p>
@@ -171,8 +198,11 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Source (Retool) Column */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-retool">Source Database (Retool)</h2>
+          <div className="space-y-6 rounded-lg border border-gray-200 shadow-sm p-6 bg-white">
+            <h2 className="text-xl font-semibold text-retool flex items-center">
+              <span className="bg-retool rounded-full w-2 h-2 mr-2"></span>
+              Source Database (Retool)
+            </h2>
             <DatabaseConnection
               title="Retool Database"
               colorClass="from-retool to-retool-light"
@@ -204,8 +234,11 @@ const Index = () => {
           </div>
 
           {/* Target (Supabase) Column */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-supabase">Target Database (Supabase)</h2>
+          <div className="space-y-6 rounded-lg border border-gray-200 shadow-sm p-6 bg-white">
+            <h2 className="text-xl font-semibold text-supabase flex items-center">
+              <span className="bg-supabase rounded-full w-2 h-2 mr-2"></span>
+              Target Database (Supabase)
+            </h2>
             <DatabaseConnection
               title="Supabase Database"
               colorClass="from-supabase to-supabase-light"
