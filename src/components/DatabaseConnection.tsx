@@ -35,16 +35,25 @@ const DatabaseConnection = ({
       return;
     }
     
-    if (!connectionString.startsWith('postgres')) {
+    // Less strict validation - just check if it contains postgres somewhere
+    if (!connectionString.toLowerCase().includes('postgres')) {
       toast({
         title: "Connection Error",
-        description: "Connection string must start with postgres:// or postgresql://",
+        description: "Connection string must include 'postgres' somewhere in the string",
         variant: "destructive",
       });
       return;
     }
     
-    await onConnect(connectionString);
+    try {
+      await onConnect(connectionString);
+    } catch (error: any) {
+      toast({
+        title: "Connection Error",
+        description: error.message || "Failed to connect to the database",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
