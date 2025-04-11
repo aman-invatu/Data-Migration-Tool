@@ -24,9 +24,14 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const databaseService = {
   // Connect to database
   connectToDatabase: async (type: 'retool' | 'supabase', connectionString: string) => {
-    // Validate connection string (basic validation)
-    if (!connectionString.startsWith('postgres://')) {
-      throw new Error('Invalid connection string format');
+    // Basic validation for connection string
+    if (!connectionString.trim()) {
+      throw new Error('Connection string cannot be empty');
+    }
+    
+    // Check if it's at least a postgres connection string - accept all formats starting with postgresql://
+    if (!connectionString.startsWith('postgres')) {
+      throw new Error('Connection string must start with postgres:// or postgresql://');
     }
     
     // Simulate connection delay

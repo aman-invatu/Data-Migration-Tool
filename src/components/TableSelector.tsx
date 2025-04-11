@@ -3,6 +3,7 @@ import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Database } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface TableSelectorProps {
   tables: string[];
@@ -19,6 +20,16 @@ const TableSelector = ({
   isLoading,
   colorClass
 }: TableSelectorProps) => {
+  const { toast } = useToast();
+  
+  const handleTableSelect = (tableName: string) => {
+    toast({
+      title: "Table Selected",
+      description: `Loading data from ${tableName}...`,
+    });
+    onTableSelect(tableName);
+  };
+  
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium flex items-center">
@@ -27,7 +38,7 @@ const TableSelector = ({
       </label>
       <Select
         value={selectedTable || ''}
-        onValueChange={onTableSelect}
+        onValueChange={handleTableSelect}
         disabled={isLoading || tables.length === 0}
       >
         <SelectTrigger className={cn("w-full", tables.length === 0 ? "opacity-50" : "")}>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Database, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface DatabaseConnectionProps {
   title: string;
@@ -22,11 +23,28 @@ const DatabaseConnection = ({
   isLoading
 }: DatabaseConnectionProps) => {
   const [connectionString, setConnectionString] = useState('');
+  const { toast } = useToast();
 
   const handleConnect = async () => {
-    if (connectionString.trim()) {
-      await onConnect(connectionString);
+    if (!connectionString.trim()) {
+      toast({
+        title: "Connection Error",
+        description: "Please enter your database connection string",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    if (!connectionString.startsWith('postgres')) {
+      toast({
+        title: "Connection Error",
+        description: "Connection string must start with postgres:// or postgresql://",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await onConnect(connectionString);
   };
 
   return (
