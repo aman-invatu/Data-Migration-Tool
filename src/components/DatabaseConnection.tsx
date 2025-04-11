@@ -3,14 +3,15 @@ import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Database, Loader2 } from 'lucide-react';
+import { Check, Database, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface DatabaseConnectionProps {
   title: string;
   colorClass: string;
-  onConnect: (connectionString: string) => Promise<void>;
+  onConnect: (connectionString: string) => Promise<boolean>; // Updated return type to boolean
   isConnected: boolean;
   isLoading: boolean;
 }
@@ -23,10 +24,14 @@ const DatabaseConnection = ({
   isLoading
 }: DatabaseConnectionProps) => {
   const [connectionString, setConnectionString] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleConnect = async () => {
+    setError(null);
+    
     if (!connectionString.trim()) {
+      setError("Please enter your database connection string");
       toast({
         title: "Connection Error",
         description: "Please enter your database connection string",
@@ -35,8 +40,9 @@ const DatabaseConnection = ({
       return;
     }
     
-    // Less strict validation - just check if it contains postgres somewhere
+    // Basic validation for postgres connection string
     if (!connectionString.toLowerCase().includes('postgres')) {
+      setError("Connection string must include 'postgres' somewhere in the string");
       toast({
         title: "Connection Error",
         description: "Connection string must include 'postgres' somewhere in the string",
@@ -46,8 +52,23 @@ const DatabaseConnection = ({
     }
     
     try {
-      await onConnect(connectionString);
+      const connected = await onConnect(connectionString);
+      
+      if (!connected) {
+        setError("Failed to connect to the database. Please check your connection string.");
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to the database. Please check your connection string.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Connection Successful",
+          description: `Successfully connected to ${title}`,
+        });
+      }
     } catch (error: any) {
+      setError(error.message || "Failed to connect to the database");
       toast({
         title: "Connection Error",
         description: error.message || "Failed to connect to the database",
@@ -75,9 +96,18 @@ const DatabaseConnection = ({
               type="text"
               placeholder="postgres://username:password@hostname:port/database"
               value={connectionString}
-              onChange={(e) => setConnectionString(e.target.value)}
+              onChange={(e) => {
+                setConnectionString(e.target.value);
+                setError(null); // Clear error when user changes the input
+              }}
               disabled={isConnected}
             />
+            {error && (
+              <Alert variant="destructive" className="mt-2 py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="ml-2">{error}</AlertDescription>
+              </Alert>
+            )}
           </div>
           <Button 
             onClick={handleConnect} 

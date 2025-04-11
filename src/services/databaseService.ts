@@ -2,56 +2,61 @@
 // This is a mock service for simulating database operations
 // In a real application, you would use actual database connections
 
-// Mock tables and data
-const MOCK_RETOOL_TABLES = ['dummy_table', 'users', 'products', 'orders', 'customers', 'transactions'];
-const MOCK_SUPABASE_TABLES = ['dummy_table', 'profiles', 'auth', 'settings'];
-
-// Mock data for Retool's dummy_table
-const MOCK_RETOOL_DATA = [
-  { id: 1, name: 'John Doe', email: 'john@example.com' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-  { id: 3, name: 'Alex Johnson', email: 'alex@example.com' },
-  { id: 4, name: 'Sarah Williams', email: 'sarah@example.com' },
-  { id: 5, name: 'Michael Brown', email: 'michael@example.com' },
-];
-
-// Mock data for other Retool tables
-const MOCK_RETOOL_USERS_DATA = [
-  { id: 1, username: 'admin', role: 'administrator', created_at: '2023-01-15' },
-  { id: 2, username: 'user1', role: 'editor', created_at: '2023-02-20' },
-  { id: 3, username: 'user2', role: 'viewer', created_at: '2023-03-05' },
-];
-
-const MOCK_RETOOL_PRODUCTS_DATA = [
-  { id: 101, name: 'Laptop', price: 999, category: 'Electronics' },
-  { id: 102, name: 'Desk Chair', price: 199, category: 'Furniture' },
-  { id: 103, name: 'Coffee Mug', price: 15, category: 'Kitchen' },
-];
-
-// Mock empty data for Supabase's dummy_table (will be populated after migration)
-let MOCK_SUPABASE_DATA: any[] = [];
-
 // Simulate connection delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const databaseService = {
-  // Connect to database
-  connectToDatabase: async (type: 'retool' | 'supabase', connectionString: string) => {
+  // Connect to database 
+  connectToDatabase: async (type: 'retool' | 'supabase', connectionString: string): Promise<string[] | false> => {
     // Basic validation for connection string
     if (!connectionString.trim()) {
       throw new Error('Connection string cannot be empty');
     }
     
-    // Check if it's at least a postgres connection string - accept all formats starting with postgresql:// or postgres://
-    if (!connectionString.toLowerCase().includes('postgres')) {
-      throw new Error('Connection string must include postgres or postgresql');
+    // More comprehensive validation for postgres connection string
+    const postgresRegex = /^postgres(ql)?:\/\/[^:]+:[^@]+@[^:]+:\d+\/\w+(\?.*)?$/;
+    
+    if (!postgresRegex.test(connectionString.toLowerCase())) {
+      console.log('Invalid connection string format:', connectionString);
+      throw new Error('Invalid PostgreSQL connection string format. Expected: postgres://username:password@hostname:port/database');
     }
     
     // Simulate connection delay
     await delay(1500);
     
-    // Return mock tables
-    return type === 'retool' ? MOCK_RETOOL_TABLES : MOCK_SUPABASE_TABLES;
+    try {
+      // In a real app, we would actually try to connect to the database here
+      // For this mock service, we'll simulate a successful connection if the string has correct format
+      // and contains specific keywords for demo purposes
+      
+      if (type === 'retool' && !connectionString.includes('retooldb.com') && !connectionString.includes('retool')) {
+        console.log('Failed to connect to Retool database, missing retooldb.com or retool in the connection string');
+        return false; // Connection failed
+      }
+      
+      if (type === 'supabase' && !connectionString.includes('supabase') && !connectionString.includes('db.io')) {
+        console.log('Failed to connect to Supabase database, missing supabase or db.io in the connection string');
+        return false; // Connection failed
+      }
+      
+      // Dynamic tables based on connection string
+      // In a real app, we would fetch the actual tables from the database
+      const dbName = connectionString.split('/').pop()?.split('?')[0];
+      
+      // Generate some dynamic table names based on the database name
+      const tables = [
+        `${dbName}_users`, 
+        `${dbName}_products`, 
+        `${dbName}_orders`,
+        `${dbName}_customers`, 
+        `${dbName}_transactions`
+      ];
+      
+      return tables;
+    } catch (error) {
+      console.error('Connection error:', error);
+      return false; // Connection failed
+    }
   },
 
   // Get table data
@@ -59,26 +64,57 @@ export const databaseService = {
     // Simulate database query delay
     await delay(1000);
     
-    // Return mock data based on database and table
-    if (type === 'retool') {
-      switch (tableName) {
-        case 'dummy_table':
-          return MOCK_RETOOL_DATA;
-        case 'users':
-          return MOCK_RETOOL_USERS_DATA;
-        case 'products':
-          return MOCK_RETOOL_PRODUCTS_DATA;
-        default:
-          // For other tables, return empty data
-          return [];
+    // Generate dynamic mock data based on the table name
+    const mockData = [];
+    const recordCount = Math.floor(Math.random() * 10) + 5; // 5-15 records
+    
+    for (let i = 1; i <= recordCount; i++) {
+      if (tableName.includes('user')) {
+        mockData.push({
+          id: i,
+          username: `user${i}`,
+          email: `user${i}@example.com`,
+          created_at: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      } else if (tableName.includes('product')) {
+        mockData.push({
+          id: i,
+          name: `Product ${i}`,
+          price: Math.floor(Math.random() * 1000) + 10,
+          category: ['Electronics', 'Clothing', 'Food', 'Books'][Math.floor(Math.random() * 4)]
+        });
+      } else if (tableName.includes('order')) {
+        mockData.push({
+          id: i,
+          customer_id: Math.floor(Math.random() * 100) + 1,
+          total_amount: Math.floor(Math.random() * 500) + 50,
+          order_date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      } else if (tableName.includes('customer')) {
+        mockData.push({
+          id: i,
+          name: `Customer ${i}`,
+          email: `customer${i}@example.com`,
+          location: ['New York', 'London', 'Tokyo', 'Sydney'][Math.floor(Math.random() * 4)]
+        });
+      } else if (tableName.includes('transaction')) {
+        mockData.push({
+          id: i,
+          order_id: Math.floor(Math.random() * 100) + 1,
+          amount: Math.floor(Math.random() * 300) + 20,
+          payment_method: ['Credit Card', 'PayPal', 'Bank Transfer', 'Cash'][Math.floor(Math.random() * 4)]
+        });
+      } else {
+        // Generic data for other tables
+        mockData.push({
+          id: i,
+          name: `Item ${i}`,
+          value: Math.floor(Math.random() * 1000)
+        });
       }
-    } else {
-      if (tableName === 'dummy_table') {
-        return MOCK_SUPABASE_DATA;
-      }
-      // For other tables, return empty data
-      return [];
     }
+    
+    return mockData;
   },
 
   // Migrate data
@@ -87,48 +123,19 @@ export const databaseService = {
     targetTable: string, 
     onProgressUpdate: (progress: number) => void
   ) => {
-    // Only support migration between any tables for this demo
-    // Simulate migration with progress updates
-    let sourceData: any[] = [];
+    // Estimate the number of records to migrate
+    const recordsCount = Math.floor(Math.random() * 100) + 20; // 20-120 records for demo
     
-    // Get the appropriate source data based on the table name
-    switch (sourceTable) {
-      case 'dummy_table':
-        sourceData = MOCK_RETOOL_DATA;
-        break;
-      case 'users':
-        sourceData = MOCK_RETOOL_USERS_DATA;
-        break;
-      case 'products':
-        sourceData = MOCK_RETOOL_PRODUCTS_DATA;
-        break;
-      default:
-        sourceData = [];
-    }
-    
-    const totalRecords = sourceData.length;
-    
-    if (totalRecords === 0) {
-      throw new Error('No data found in the source table');
-    }
-    
-    for (let i = 0; i < totalRecords; i++) {
-      // Simulate record processing
+    // Simulate migration process with progress updates
+    for (let i = 0; i < 10; i++) {
       await delay(500);
-      
-      // Update progress
-      const progress = Math.round(((i + 1) / totalRecords) * 100);
+      const progress = Math.round(((i + 1) / 10) * 100);
       onProgressUpdate(progress);
-    }
-
-    // Simulate successful migration - store the migrated data in the target
-    if (targetTable === 'dummy_table') {
-      MOCK_SUPABASE_DATA = [...sourceData];
     }
     
     return {
       success: true,
-      recordsCount: totalRecords
+      recordsCount
     };
   }
 };

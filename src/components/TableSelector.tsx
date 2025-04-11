@@ -2,7 +2,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Database } from 'lucide-react';
+import { Database, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TableSelectorProps {
@@ -36,24 +36,33 @@ const TableSelector = ({
         <Database className={`h-4 w-4 mr-1 ${colorClass}`} />
         Select Table
       </label>
-      <Select
-        value={selectedTable || ''}
-        onValueChange={handleTableSelect}
-        disabled={isLoading || tables.length === 0}
-      >
-        <SelectTrigger className={cn("w-full", tables.length === 0 ? "opacity-50" : "")}>
-          <SelectValue placeholder="Select a table" />
-        </SelectTrigger>
-        <SelectContent className="bg-white border shadow-md">
-          {tables.map((table) => (
-            <SelectItem key={table} value={table} className="hover:bg-gray-100">
-              {table}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {tables.length === 0 && !isLoading && (
-        <p className="text-xs text-muted-foreground">No tables available</p>
+      {isLoading ? (
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading tables...</span>
+        </div>
+      ) : (
+        <>
+          <Select
+            value={selectedTable || ''}
+            onValueChange={handleTableSelect}
+            disabled={isLoading || tables.length === 0}
+          >
+            <SelectTrigger className={cn("w-full", tables.length === 0 ? "opacity-50" : "")}>
+              <SelectValue placeholder="Select a table" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border shadow-md">
+              {tables.map((table) => (
+                <SelectItem key={table} value={table} className="hover:bg-gray-100">
+                  {table}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {tables.length === 0 && (
+            <p className="text-xs text-muted-foreground">No tables available. Please check your connection.</p>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import DatabaseConnection from '@/components/DatabaseConnection';
 import TableSelector from '@/components/TableSelector';
@@ -37,31 +37,33 @@ const Index = () => {
 
   // Handle Retool connection
   const handleRetoolConnect = async (connectionString: string) => {
-    // Validate connection string
-    if (!connectionString.trim()) {
-      toast({
-        title: "Connection Error",
-        description: "Please enter your Retool database connection string",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsRetoolConnecting(true);
       const tables = await databaseService.connectToDatabase('retool', connectionString);
+      
+      if (tables === false) {
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect to Retool database. Please check your connection string.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       setRetoolTables(tables);
       setIsRetoolConnected(true);
       toast({
         title: "Connected to Retool Database",
         description: `Found ${tables.length} tables`,
       });
+      return true;
     } catch (error: any) {
       toast({
         title: "Connection Failed",
         description: error.message,
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsRetoolConnecting(false);
     }
@@ -69,31 +71,33 @@ const Index = () => {
 
   // Handle Supabase connection
   const handleSupabaseConnect = async (connectionString: string) => {
-    // Validate connection string
-    if (!connectionString.trim()) {
-      toast({
-        title: "Connection Error",
-        description: "Please enter your Supabase database connection string",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsSupabaseConnecting(true);
       const tables = await databaseService.connectToDatabase('supabase', connectionString);
+      
+      if (tables === false) {
+        toast({
+          title: "Connection Failed",
+          description: "Failed to connect to Supabase database. Please check your connection string.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       setSupabaseTables(tables);
       setIsSupabaseConnected(true);
       toast({
         title: "Connected to Supabase Database",
         description: `Found ${tables.length} tables`,
       });
+      return true;
     } catch (error: any) {
       toast({
         title: "Connection Failed",
         description: error.message,
         variant: "destructive",
       });
+      return false;
     } finally {
       setIsSupabaseConnecting(false);
     }
